@@ -20,19 +20,6 @@ func Index(writer http.ResponseWriter, request *http.Request, params httprouter.
 func main() {
 	router := httprouter.New()
 	api.Routes(router)
-	fmt.Println("Starting server at port 8000")
-
-	// router.GET("/hello/:name", Hello)
-	// router.POST("/otp-login", SendOtp)
-	// fmt.Println("Starting server at port 8080...")
-	// log.Fatal(http.ListenAndServe(":8080", router))
-
-	// queryParams := url.Values{} // in `Values`, the type of values is slice of string and key is string. Whole `Values` is a map of string, slice
-	// queryParams.Add("country", "in")
-	// queryParams.Add("country", "us")
-	// queryParams.Add("category", "sports")
-	// queryParams.Add("apiKey", "6c2421d5b3174ab5b768cc14dbccc3ba")
-	// queryParams.Add("pageSize", "2")
 
 	// resp, err := api.GetRequestHandler(
 	// 	"https://newsapi.org",

@@ -1,4 +1,4 @@
-module auth
+module github.com/sparsh011/AuthBackend-Go
 
 go 1.22.6
 
