@@ -1,4 +1,4 @@
-package api
+package service
 
 import (
 	"log"
@@ -29,4 +29,16 @@ func OtpServiceClientSecret() string {
 	}
 
 	return os.Getenv("OTP_SERVICE_CLIENT_SECRET")
+}
+
+func GetPort() string {
+	println(godotenv.Unmarshal(".env"))
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatal(err)
+		log.Fatal("Error loading .env file")
+	}
+
+	return os.Getenv("PORT")
 }

@@ -1,6 +1,7 @@
-package api
+package helper
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -33,7 +34,7 @@ func GetRequestHandler(
 	}
 
 	// Construct the full URL with query parameters
-	fullURL := fmt.Sprintf("%s%s?%s", networkUrl, apiRoute, queryParams.Encode())
+	fullURL := fmt.Sprintf("%s%s?%s", networkUrl, apiRoute, queryParams.Encode()) // used to combine networkUrl, apiRoute and query params on the basis of provided formatter
 
 	// Create the GET request
 	req, getRequestCreationError := http.NewRequest("GET", fullURL, nil)
@@ -65,6 +66,58 @@ func GetRequestHandler(
 	if unmarshallingError := json.Unmarshal(responseData, &jsonResponse); unmarshallingError != nil {
 		return nil, fmt.Errorf("error unmarshalling response: %v", unmarshallingError)
 	}
+
+	// Return the JSON response
+	return jsonResponse, nil
+}
+
+func PostRequestHandler(
+	networkUrl string,
+	apiRoute string,
+	pathVars map[string]string,
+	headers map[string]string,
+	body []byte,
+) (map[string]interface{}, error) {
+	// Replace path variables in the route
+	for key, value := range pathVars {
+		apiRoute = strings.Replace(apiRoute, "{"+key+"}", value, -1)
+	}
+
+	// Construct the full URL
+	fullURL := fmt.Sprintf("%s%s", networkUrl, apiRoute) // used to combine networkUrl and apiRoute on the basis of provided formatter
+
+	// Create the POST request with the provided body
+	req, postRequestCreationError := http.NewRequest("POST", fullURL, bytes.NewBuffer(body))
+	if postRequestCreationError != nil {
+		return nil, fmt.Errorf("error creating request: %v", postRequestCreationError)
+	}
+
+	// Add headers to the request
+	for key, value := range headers {
+		req.Header.Add(key, value)
+	}
+
+	// Make the POST request. Do sends an HTTP request and returns an HTTP response
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making request: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	// Read the response body
+	responseData, readingResponseError := io.ReadAll(resp.Body)
+	if readingResponseError != nil {
+		return nil, fmt.Errorf("error reading response: %v", readingResponseError)
+	}
+
+	// Unmarshal the response body into a map
+	var jsonResponse map[string]interface{}
+	if unmarshallingError := json.Unmarshal(responseData, &jsonResponse); unmarshallingError != nil {
+		return nil, fmt.Errorf("error unmarshalling response: %v", unmarshallingError)
+	}
+
+	fmt.Println("request: ", req)
 
 	// Return the JSON response
 	return jsonResponse, nil
