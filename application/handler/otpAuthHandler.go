@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/sparsh011/AuthBackend-Go/application/data"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
+	data "github.com/sparsh011/AuthBackend-Go/application/models"
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 

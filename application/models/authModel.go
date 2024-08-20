@@ -1,4 +1,4 @@
-package data
+package models
 
 type SendOtpRequest struct {
 	PhoneNumber string `json:"phoneNumber,omitempty" validate:"required"`
@@ -15,4 +15,12 @@ type VerifyOtpRequest struct {
 
 type ResendOtpRequest struct {
 	OrderId string `json:"orderId,omitempty" validate:"required"`
+}
+
+type User struct {
+	PhoneNumber  string `json:"phoneNumber"`
+	CountryCode  string `json:"countryCode"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	LastLoginAt  int64  `json:"lastLoginAt"`
 }
