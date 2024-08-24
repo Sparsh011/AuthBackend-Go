@@ -9,7 +9,6 @@ import (
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
-// Configures all the routes and starts the server
 func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	const (
 		SendOtpRoute   = "/login/send-otp"
@@ -21,5 +20,11 @@ func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	router.POST(SendOtpRoute, handler.SendOtp)
 	router.POST(ResendOtpRoute, handler.ResendOtp)
 	router.POST(VerifyOtpRoute, handler.VerifyOtp)
-	log.Fatal(http.ListenAndServe(service.GetPort(), router))
+
+	println("Starting server on port", service.GetPort())
+	err := http.ListenAndServe(service.GetPort(), router)
+	if err != nil {
+		println("Error starting server:", err.Error())
+		log.Fatal(err)
+	}
 }

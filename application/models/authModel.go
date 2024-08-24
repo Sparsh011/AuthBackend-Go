@@ -1,5 +1,7 @@
 package models
 
+import "gorm.io/gorm"
+
 type SendOtpRequest struct {
 	PhoneNumber string `json:"phoneNumber,omitempty" validate:"required"`
 	OtpLength   int    `json:"otpLength,omitempty" validate:"required"`
@@ -18,9 +20,22 @@ type ResendOtpRequest struct {
 }
 
 type User struct {
-	PhoneNumber  string `json:"phoneNumber"`
-	CountryCode  string `json:"countryCode"`
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
-	LastLoginAt  int64  `json:"lastLoginAt"`
+	Name               string `json:"name"`
+	PhoneNumber        string `json:"phoneNumber"`
+	CountryCode        string `json:"countryCode"`
+	AccessToken        string `json:"accessToken"`
+	RefreshToken       string `json:"refreshToken"`
+	LastLoginAt        int64  `json:"lastLoginAt"`
+	RefreshTokenExpiry int64  `json:"refreshTokenExpiry"`
+}
+
+// DBUser struct for the GORM model
+type DBUser struct {
+	gorm.Model
+	Name               string `gorm:"size:20"`
+	PhoneNumber        string `gorm:"unique;size:15"`
+	CountryCode        string `gorm:"size:5"`
+	RefreshToken       string `gorm:"type:text"`
+	LastLoginAt        int64  `gorm:"autoUpdateTime"`
+	RefreshTokenExpiry int64  `gorm:"not null"`
 }
