@@ -8,7 +8,7 @@ import (
 
 func main() {
 	router := httprouter.New()
+	// Initialize DB before starting server
+	service.InitializeDB()
 	routes.ConfigureRoutesAndStartServer(router)
-	service.ConnectToDatabase()
-	service.SyncDatabase()
 }

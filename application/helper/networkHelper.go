@@ -117,8 +117,6 @@ func PostRequestHandler(
 		return nil, fmt.Errorf("error unmarshalling response: %v", unmarshallingError)
 	}
 
-	fmt.Println("request: ", req)
-
 	// Return the JSON response
 	return jsonResponse, nil
 }

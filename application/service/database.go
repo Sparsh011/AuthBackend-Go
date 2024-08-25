@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/sparsh011/AuthBackend-Go/application/models"
 	"gorm.io/driver/postgres"
@@ -11,11 +10,14 @@ import (
 
 var DB *gorm.DB
 
-func ConnectToDatabase() (*gorm.DB, error) {
-	println("Starting db donnection")
+func InitializeDB() {
+	ConnectToDatabase()
+	SyncDatabase()
+}
 
+func ConnectToDatabase() (*gorm.DB, error) {
 	var err error
-	println("Starting db donnection")
+
 	dbPort := GetDBPort()
 	dbPassword := GetDBPassword()
 	dbUser := GetDBUsername()
@@ -26,30 +28,17 @@ func ConnectToDatabase() (*gorm.DB, error) {
 
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Println("Failed to connect to")
-		return nil, err
+		errorStr := "Failed to connect to DB, " + err.Error()
+		panic(errorStr)
 	}
 
 	return DB, nil
 }
 
+// Perform AutoMigrate here to sync the schema with server.
+// NOTE: AutoMigrate will create tables, missing foreign keys, constraints, columns and indexes.
+// It will change existing column's type if its size, precision, nullable changed.
+// It WON'T delete unused columns to protect your data
 func SyncDatabase() {
-	fmt.Println(
-		"Suyncing DB")
-	DB.AutoMigrate(&models.DBUser{})
-
-	dummyUser := models.DBUser{
-		Name:               "Sparsh chadha",
-		PhoneNumber:        "55555555",
-		CountryCode:        "+1",
-		RefreshToken:       "dummy_refresh_token",
-		LastLoginAt:        time.Now().Unix(),
-		RefreshTokenExpiry: time.Now().Add(24 * time.Hour).Unix(), // Token expires in 24 hours
-	}
-
-	// Insert the dummy user into the database
-	result := DB.Create(&dummyUser)
-
-	print("Result: ", result)
-
+	DB.AutoMigrate(&models.ETUser{})
 }

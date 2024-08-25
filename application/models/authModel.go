@@ -29,8 +29,8 @@ type User struct {
 	RefreshTokenExpiry int64  `json:"refreshTokenExpiry"`
 }
 
-// DBUser struct for the GORM model
-type DBUser struct {
+// ETUser struct for the GORM model
+type ETUser struct {
 	gorm.Model
 	Name               string `gorm:"size:20"`
 	PhoneNumber        string `gorm:"unique;size:15"`

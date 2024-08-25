@@ -20,8 +20,8 @@ func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	router.POST(SendOtpRoute, handler.SendOtp)
 	router.POST(ResendOtpRoute, handler.ResendOtp)
 	router.POST(VerifyOtpRoute, handler.VerifyOtp)
+	router.GET(HomeRoute, handler.IndexHandler)
 
-	println("Starting server on port", service.GetPort())
 	err := http.ListenAndServe(service.GetPort(), router)
 	if err != nil {
 		println("Error starting server:", err.Error())

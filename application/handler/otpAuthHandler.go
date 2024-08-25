@@ -58,6 +58,7 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 		return
 	}
 
+	writer.WriteHeader(http.StatusOK)
 	// Encode the response map to JSON. This returns a json back to the frontend/client
 	err := json.NewEncoder(writer).Encode(sendOtpResponse)
 	if err != nil {
@@ -67,7 +68,6 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 
 	// Set response headers
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -118,6 +118,7 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		return
 	}
 
+	writer.WriteHeader(http.StatusOK)
 	// Encode the response map to JSON. This returns a json back to the frontend/client
 	err := json.NewEncoder(writer).Encode(verifyOtpResponse)
 	if err != nil {
@@ -127,7 +128,6 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	// Set response headers
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -174,6 +174,7 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		return
 	}
 
+	writer.WriteHeader(http.StatusOK)
 	// Encode the response map to JSON and write it to the response
 	if jsonParsingError := json.NewEncoder(writer).Encode(resendOtpResponse); jsonParsingError != nil {
 		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
@@ -182,7 +183,6 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	// Set response headers
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func getOTPApiHeaders() map[string]string {
