@@ -8,7 +8,7 @@ import (
 )
 
 func OtpServiceClientId() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -20,7 +20,8 @@ func OtpServiceClientId() string {
 }
 
 func OtpServiceClientSecret() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
+
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -32,7 +33,8 @@ func OtpServiceClientSecret() string {
 }
 
 func GetPort() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
+
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -44,7 +46,8 @@ func GetPort() string {
 }
 
 func GetDBPort() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
+
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -56,7 +59,8 @@ func GetDBPort() string {
 }
 
 func GetDBUsername() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
+
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -68,7 +72,8 @@ func GetDBUsername() string {
 }
 
 func GetDBHost() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
+
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -80,7 +85,8 @@ func GetDBHost() string {
 }
 
 func GetDBName() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
+
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -92,7 +98,8 @@ func GetDBName() string {
 }
 
 func GetDBPassword() string {
-	println(godotenv.Unmarshal(".env"))
+	godotenv.Unmarshal(".env")
+
 	err := godotenv.Load(".env")
 
 	if err != nil {
@@ -101,4 +108,17 @@ func GetDBPassword() string {
 	}
 
 	return os.Getenv("DB_PASSWORD")
+}
+
+func GetJWTSigningKey() string {
+	godotenv.Unmarshal(".env")
+
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatal(err)
+		log.Fatal("Error loading .env file")
+	}
+
+	return os.Getenv("JWT_SIGNING_KEY")
 }

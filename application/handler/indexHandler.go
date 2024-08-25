@@ -12,12 +12,11 @@ type Response struct {
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	response := Response{
-		Message: "Welcome to the index page",
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 
+	response := Response{
+		Message: "Welcome to Index page",
+	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

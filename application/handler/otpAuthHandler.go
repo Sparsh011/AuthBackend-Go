@@ -3,10 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
-	data "github.com/sparsh011/AuthBackend-Go/application/models"
+	"github.com/sparsh011/AuthBackend-Go/application/models"
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
@@ -32,7 +33,7 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 
 	headers := getOTPApiHeaders()
 
-	otpRequestData := data.SendOtpRequest{
+	otpRequestData := models.SendOtpRequest{
 		PhoneNumber: phoneNumber,
 		OtpLength:   int(otpLength),
 		Channel:     "SMS",
@@ -92,7 +93,7 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	headers := getOTPApiHeaders()
 
-	verifyOtpRequest := data.VerifyOtpRequest{
+	verifyOtpRequest := models.VerifyOtpRequest{
 		PhoneNumber: phoneNumber,
 		Otp:         otp,
 		OrderId:     orderId,
@@ -117,6 +118,31 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		http.Error(writer, verifyOtpError.Error(), helper.GetErrorStatusCode(verifyOtpError))
 		return
 	}
+
+	access, accessCreationError := helper.CreateJWTToken(
+		[]byte(service.GetJWTSigningKey()),
+		phoneNumber,
+		time.Now().Add(time.Hour*48),
+	)
+
+	if accessCreationError != nil {
+		http.Error(writer, "Failed to create access token.", http.StatusInternalServerError)
+		return
+	}
+
+	refresh, refreshCreationError := helper.CreateJWTToken(
+		[]byte(service.GetJWTSigningKey()),
+		phoneNumber,
+		time.Now().Add(10*365*24*time.Hour),
+	)
+
+	if refreshCreationError != nil {
+		http.Error(writer, "Failed to create refresh token.", http.StatusInternalServerError)
+		return
+	}
+
+	verifyOtpResponse["access"] = access
+	verifyOtpResponse["refresh"] = refresh
 
 	writer.WriteHeader(http.StatusOK)
 	// Encode the response map to JSON. This returns a json back to the frontend/client
@@ -150,7 +176,7 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	headers := getOTPApiHeaders()
 
-	resendOtpRequest := data.ResendOtpRequest{
+	resendOtpRequest := models.ResendOtpRequest{
 		OrderId: orderId,
 	}
 

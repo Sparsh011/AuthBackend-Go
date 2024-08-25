@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -21,6 +22,8 @@ func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	router.POST(ResendOtpRoute, handler.ResendOtp)
 	router.POST(VerifyOtpRoute, handler.VerifyOtp)
 	router.GET(HomeRoute, handler.IndexHandler)
+
+	fmt.Println("Starting server at port", service.GetPort())
 
 	err := http.ListenAndServe(service.GetPort(), router)
 	if err != nil {
