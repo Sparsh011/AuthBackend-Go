@@ -40,5 +40,5 @@ func ConnectToDatabase() (*gorm.DB, error) {
 // It will change existing column's type if its size, precision, nullable changed.
 // It WON'T delete unused columns to protect your data
 func SyncDatabase() {
-	DB.AutoMigrate(&models.ETUser{})
+	DB.AutoMigrate(&models.User{}, &models.Expense{})
 }

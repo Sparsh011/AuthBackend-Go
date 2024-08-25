@@ -7,8 +7,10 @@ import (
 )
 
 func main() {
-	router := httprouter.New()
 	// Initialize DB before starting server
 	service.InitializeDB()
+
+	// Starting server
+	router := httprouter.New()
 	routes.ConfigureRoutesAndStartServer(router)
 }
