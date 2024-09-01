@@ -14,7 +14,7 @@ import (
 func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	const (
 		SendOtpRoute      = "/login/send-otp"
-		ResendOtpRoute    = "/login/resent-otp"
+		ResendOtpRoute    = "/login/resend-otp"
 		VerifyOtpRoute    = "/login/verify-otp"
 		RefreshTokenRoute = "/user/refresh"
 		HomeRoute         = "/"
