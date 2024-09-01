@@ -24,11 +24,15 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 	// Extract known fields
 	phoneNumber, phoneExtractionError := rawRequest[PhoneNumberKey].(string)
 	otpLength, otpLengthExtractionError := rawRequest[OtpLengthKey].(float64) // JSON numbers are float64 by default
-	timeout, timeoutExtractionError := rawRequest[TimeoutKey].(float64)
+	expiry, expiryExtractionError := rawRequest[ExpiryKey].(float64)
 
-	if !phoneExtractionError || !otpLengthExtractionError || !timeoutExtractionError {
+	if !phoneExtractionError || !otpLengthExtractionError || !expiryExtractionError {
 		http.Error(writer, "Missing required fields", http.StatusBadRequest)
 		return
+	}
+
+	if int(expiry) < 60 {
+		http.Error(writer, "Expiry cannot be less than 60 seconds.", http.StatusBadRequest)
 	}
 
 	headers := getOTPApiHeaders()
@@ -37,7 +41,7 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 		PhoneNumber: phoneNumber,
 		OtpLength:   int(otpLength),
 		Channel:     "SMS",
-		Expiry:      int(timeout),
+		Expiry:      int(expiry),
 	}
 
 	body, otpRequestParsingError := json.Marshal(otpRequestData)
@@ -230,7 +234,7 @@ func getOTPApiHeaders() map[string]string {
 const (
 	PhoneNumberKey = "phoneNumber"
 	OtpLengthKey   = "otpLength"
-	TimeoutKey     = "timeout"
+	ExpiryKey      = "expiry"
 	OrderIdKey     = "orderId"
 	OtpKey         = "otp"
 )
