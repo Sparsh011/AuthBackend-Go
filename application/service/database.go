@@ -3,7 +3,8 @@ package service
 import (
 	"fmt"
 
-	"github.com/sparsh011/AuthBackend-Go/application/models"
+	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
+	"github.com/sparsh011/AuthBackend-Go/application/models/expense"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -40,5 +41,30 @@ func ConnectToDatabase() (*gorm.DB, error) {
 // It will change existing column's type if its size, precision, nullable changed.
 // It WON'T delete unused columns to protect your data
 func SyncDatabase() {
-	DB.AutoMigrate(&models.User{}, &models.Expense{})
+	DB.AutoMigrate(&authpkg.User{}, &expense.Expense{})
+}
+
+func InsertUser(user *authpkg.User) (bool, error) {
+	existingUser := authpkg.User{}
+	result := DB.Where("phoneNumber = ?", user.PhoneNumber).First(&existingUser)
+
+	if result.Error == nil {
+		// User exists, update the CreatedAt time
+		existingUser.CreatedAt = user.CreatedAt
+		updateResult := DB.Save(&existingUser)
+		if updateResult.Error != nil {
+			return false, updateResult.Error
+		}
+		return true, nil
+	} else if result.Error == gorm.ErrRecordNotFound {
+		// User doesn't exist, create a new user
+		createResult := DB.Create(&user)
+		if createResult.Error != nil {
+			return false, createResult.Error
+		}
+		return true, nil
+	} else {
+		// Some other error occurred
+		return false, result.Error
+	}
 }

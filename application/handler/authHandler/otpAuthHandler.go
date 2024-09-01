@@ -1,4 +1,4 @@
-package handler
+package authhandler
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
-	"github.com/sparsh011/AuthBackend-Go/application/models"
+	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
@@ -33,7 +33,7 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 
 	headers := getOTPApiHeaders()
 
-	otpRequestData := models.SendOtpRequest{
+	otpRequestData := authpkg.SendOtpRequest{
 		PhoneNumber: phoneNumber,
 		OtpLength:   int(otpLength),
 		Channel:     "SMS",
@@ -93,7 +93,7 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	headers := getOTPApiHeaders()
 
-	verifyOtpRequest := models.VerifyOtpRequest{
+	verifyOtpRequest := authpkg.VerifyOtpRequest{
 		PhoneNumber: phoneNumber,
 		Otp:         otp,
 		OrderId:     orderId,
@@ -112,6 +112,14 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		nil,
 		headers,
 		body,
+	)
+
+	service.InsertUser(
+		&authpkg.User{
+			CreatedAt:     time.Now(),
+			ExpenseBudget: 0,
+			PhoneNumber:   phoneNumber,
+		},
 	)
 
 	if verifyOtpError != nil {
@@ -176,7 +184,7 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	headers := getOTPApiHeaders()
 
-	resendOtpRequest := models.ResendOtpRequest{
+	resendOtpRequest := authpkg.ResendOtpRequest{
 		OrderId: orderId,
 	}
 
