@@ -1,4 +1,4 @@
-package data
+package authpkg
 
 type SendOtpRequest struct {
 	PhoneNumber string `json:"phoneNumber,omitempty" validate:"required"`

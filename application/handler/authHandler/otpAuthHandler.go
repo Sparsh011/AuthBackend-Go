@@ -1,12 +1,13 @@
-package handler
+package authhandler
 
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/sparsh011/AuthBackend-Go/application/data"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
+	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
@@ -32,7 +33,7 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 
 	headers := getOTPApiHeaders()
 
-	otpRequestData := data.SendOtpRequest{
+	otpRequestData := authpkg.SendOtpRequest{
 		PhoneNumber: phoneNumber,
 		OtpLength:   int(otpLength),
 		Channel:     "SMS",
@@ -58,6 +59,7 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 		return
 	}
 
+	writer.WriteHeader(http.StatusOK)
 	// Encode the response map to JSON. This returns a json back to the frontend/client
 	err := json.NewEncoder(writer).Encode(sendOtpResponse)
 	if err != nil {
@@ -67,7 +69,6 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 
 	// Set response headers
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -92,7 +93,7 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	headers := getOTPApiHeaders()
 
-	verifyOtpRequest := data.VerifyOtpRequest{
+	verifyOtpRequest := authpkg.VerifyOtpRequest{
 		PhoneNumber: phoneNumber,
 		Otp:         otp,
 		OrderId:     orderId,
@@ -113,11 +114,45 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		body,
 	)
 
+	service.InsertUser(
+		&authpkg.User{
+			CreatedAt:     time.Now(),
+			ExpenseBudget: 0,
+			PhoneNumber:   phoneNumber,
+		},
+	)
+
 	if verifyOtpError != nil {
 		http.Error(writer, verifyOtpError.Error(), helper.GetErrorStatusCode(verifyOtpError))
 		return
 	}
 
+	access, accessCreationError := helper.CreateJWTToken(
+		[]byte(service.GetJWTSigningKey()),
+		phoneNumber,
+		time.Now().Add(time.Hour*48),
+	)
+
+	if accessCreationError != nil {
+		http.Error(writer, "Failed to create access token.", http.StatusInternalServerError)
+		return
+	}
+
+	refresh, refreshCreationError := helper.CreateJWTToken(
+		[]byte(service.GetJWTSigningKey()),
+		phoneNumber,
+		time.Now().Add(10*365*24*time.Hour),
+	)
+
+	if refreshCreationError != nil {
+		http.Error(writer, "Failed to create refresh token.", http.StatusInternalServerError)
+		return
+	}
+
+	verifyOtpResponse["access"] = access
+	verifyOtpResponse["refresh"] = refresh
+
+	writer.WriteHeader(http.StatusOK)
 	// Encode the response map to JSON. This returns a json back to the frontend/client
 	err := json.NewEncoder(writer).Encode(verifyOtpResponse)
 	if err != nil {
@@ -127,7 +162,6 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	// Set response headers
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -150,7 +184,7 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	headers := getOTPApiHeaders()
 
-	resendOtpRequest := data.ResendOtpRequest{
+	resendOtpRequest := authpkg.ResendOtpRequest{
 		OrderId: orderId,
 	}
 
@@ -174,6 +208,7 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		return
 	}
 
+	writer.WriteHeader(http.StatusOK)
 	// Encode the response map to JSON and write it to the response
 	if jsonParsingError := json.NewEncoder(writer).Encode(resendOtpResponse); jsonParsingError != nil {
 		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
@@ -182,7 +217,6 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	// Set response headers
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func getOTPApiHeaders() map[string]string {
