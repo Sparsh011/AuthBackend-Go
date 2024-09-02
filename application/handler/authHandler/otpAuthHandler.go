@@ -133,6 +133,7 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	if verifyOtpResponse["isOTPVerified"] == false {
 		http.Error(writer, verifyOtpResponse["reason"].(string), http.StatusBadRequest)
+		return
 	}
 
 	access, accessCreationError := helper.CreateJWTToken(
