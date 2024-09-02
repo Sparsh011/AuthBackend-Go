@@ -90,6 +90,8 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 	otp, otpExtractionError := rawRequest[OtpKey].(string)
 	orderId, orderIdExtractionError := rawRequest[OrderIdKey].(string)
 
+	println("Phone number: ", phoneNumber, "\nOTP: ", otp, "\norderId: ", orderId)
+
 	if !phoneExtractionError || !otpExtractionError || !orderIdExtractionError {
 		http.Error(writer, "Missing required fields", http.StatusBadRequest)
 		return
@@ -118,21 +120,23 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		body,
 	)
 
-	service.InsertUser(
-		&authpkg.User{
-			CreatedAt:     time.Now(),
-			ExpenseBudget: 0,
-			PhoneNumber:   phoneNumber,
-		},
-	)
-
 	if verifyOtpError != nil {
 		http.Error(writer, verifyOtpError.Error(), helper.GetErrorStatusCode(verifyOtpError))
 		return
 	}
+	if verifyOtpResponse["isOTPVerified"] != true {
+		// Check if the "message" is present and not nil
+		var message string
+		if verifyOtpResponse["message"] != nil {
+			message = verifyOtpResponse["message"].(string)
+		} else if verifyOtpResponse["reason"] != nil {
+			message = verifyOtpResponse["reason"].(string)
+		} else {
+			message = "Unknown error"
+		}
 
-	if verifyOtpResponse["isOTPVerified"] == false {
-		http.Error(writer, verifyOtpResponse["reason"].(string), http.StatusBadRequest)
+		// Send the error response
+		http.Error(writer, "OTP verification failed because "+message, http.StatusBadRequest)
 		return
 	}
 
@@ -157,6 +161,14 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		http.Error(writer, "Failed to create refresh token.", http.StatusInternalServerError)
 		return
 	}
+
+	service.InsertUser(
+		&authpkg.User{
+			CreatedAt:     time.Now(),
+			ExpenseBudget: 0,
+			PhoneNumber:   phoneNumber,
+		},
+	)
 
 	verifyOtpResponse["access"] = access
 	verifyOtpResponse["refresh"] = refresh
