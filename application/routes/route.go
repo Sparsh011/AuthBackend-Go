@@ -8,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/sparsh011/AuthBackend-Go/application/handler"
 	authhandler "github.com/sparsh011/AuthBackend-Go/application/handler/authHandler"
+	profilehandler "github.com/sparsh011/AuthBackend-Go/application/handler/profileHandler"
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
@@ -17,6 +18,7 @@ func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 		ResendOtpRoute    = "/login/resend-otp"
 		VerifyOtpRoute    = "/login/verify-otp"
 		RefreshTokenRoute = "/user/refresh"
+		UserProfileRoute  = "/user/profile"
 		HomeRoute         = "/"
 	)
 
@@ -25,6 +27,7 @@ func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	router.POST(VerifyOtpRoute, authhandler.VerifyOtp)
 	router.GET(HomeRoute, handler.IndexHandler)
 	router.POST(RefreshTokenRoute, authhandler.RefreshToken)
+	router.GET(UserProfileRoute, profilehandler.UserProfile)
 
 	fmt.Println("Starting server at port", service.GetPort())
 
