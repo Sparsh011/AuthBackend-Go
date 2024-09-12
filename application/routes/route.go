@@ -19,12 +19,14 @@ func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 		VerifyOtpRoute    = "/login/verify-otp"
 		RefreshTokenRoute = "/user/refresh"
 		UserProfileRoute  = "/user/profile"
+		VerifyTokenRoute  = "/login/otp/verify-token"
 		HomeRoute         = "/"
 	)
 
 	router.POST(SendOtpRoute, authhandler.SendOtp)
 	router.POST(ResendOtpRoute, authhandler.ResendOtp)
 	router.POST(VerifyOtpRoute, authhandler.VerifyOtp)
+	router.POST(VerifyTokenRoute, authhandler.ValidateOtpVerificationToken)
 	router.GET(HomeRoute, handler.IndexHandler)
 	router.POST(RefreshTokenRoute, authhandler.RefreshToken)
 	router.GET(UserProfileRoute, profilehandler.UserProfile)

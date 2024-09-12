@@ -76,7 +76,8 @@ func PostRequestHandler(
 	apiRoute string,
 	pathVars map[string]string,
 	headers map[string]string,
-	body []byte,
+	body interface{},
+	contentType string,
 ) (map[string]interface{}, error) {
 	// Replace path variables in the route
 	for key, value := range pathVars {
@@ -86,8 +87,27 @@ func PostRequestHandler(
 	// Construct the full URL
 	fullURL := fmt.Sprintf("%s%s", networkUrl, apiRoute) // used to combine networkUrl and apiRoute on the basis of provided formatter
 
+	var reqBody io.Reader
+
+	// Handle different body types
+	if contentType == "application/x-www-form-urlencoded" {
+		// If body is form data, convert it to url.Values
+		formData, ok := body.(url.Values)
+		if !ok {
+			return nil, fmt.Errorf("expected form data to be of type url.Values")
+		}
+		reqBody = strings.NewReader(formData.Encode())
+	} else {
+		// If body is raw JSON or other, assume it's []byte
+		rawBody, ok := body.([]byte)
+		if !ok {
+			return nil, fmt.Errorf("expected raw body to be of type []byte")
+		}
+		reqBody = bytes.NewBuffer(rawBody)
+	}
+
 	// Create the POST request with the provided body
-	req, postRequestCreationError := http.NewRequest("POST", fullURL, bytes.NewBuffer(body))
+	req, postRequestCreationError := http.NewRequest("POST", fullURL, reqBody)
 	if postRequestCreationError != nil {
 		return nil, fmt.Errorf("error creating request: %v", postRequestCreationError)
 	}

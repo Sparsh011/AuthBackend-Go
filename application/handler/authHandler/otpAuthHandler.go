@@ -56,6 +56,7 @@ func SendOtp(writer http.ResponseWriter, request *http.Request, params httproute
 		nil,
 		headers,
 		body,
+		"application/json",
 	)
 
 	if sendOtpError != nil {
@@ -118,6 +119,7 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		nil,
 		headers,
 		body,
+		"application/json",
 	)
 
 	if verifyOtpError != nil {
@@ -222,6 +224,7 @@ func ResendOtp(writer http.ResponseWriter, request *http.Request, params httprou
 		nil,
 		headers,
 		body,
+		"application/json",
 	)
 
 	if resendOtpError != nil {
