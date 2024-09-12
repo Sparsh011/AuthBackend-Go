@@ -12,7 +12,7 @@ import (
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
-func ValidateOtpVerificationToken(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	var rawRequest map[string]interface{}
 
 	if bodyParsingError := json.NewDecoder(request.Body).Decode(&rawRequest); bodyParsingError != nil {

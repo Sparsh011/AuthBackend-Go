@@ -40,6 +40,10 @@ func GetJWTSigningKey() string {
 	return os.Getenv("JWT_SIGNING_KEY")
 }
 
+func GetGoogleOAuthClientID() string {
+	return os.Getenv("GOOGLE_OAUTH_CLIENT_ID")
+}
+
 // import (
 // 	"log"
 // 	"os"
@@ -161,4 +165,16 @@ func GetJWTSigningKey() string {
 // 	}
 
 // 	return os.Getenv("JWT_SIGNING_KEY")
+// }
+
+// func GetGoogleOAuthClientID() string {
+// 	godotenv.Unmarshal(".env")
+
+// 	err := godotenv.Load(".env")
+
+// 	if err != nil {
+// 		log.Fatal(err)
+// 		log.Fatal("Error loading .env file")
+// 	}
+// 	return os.Getenv("GOOGLE_OAUTH_CLIENT_ID")
 // }
