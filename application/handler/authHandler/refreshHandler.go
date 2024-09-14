@@ -9,8 +9,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
+	"github.com/sparsh011/AuthBackend-Go/application/initializers"
 	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
-	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
 func RefreshToken(writer http.ResponseWriter, request *http.Request, _ httprouter.Params) {
@@ -30,7 +30,7 @@ func RefreshToken(writer http.ResponseWriter, request *http.Request, _ httproute
 			signingError := "Unexpected signing error: " + token.Header["alg"].(string)
 			return nil, fmt.Errorf(signingError, http.StatusUnauthorized)
 		}
-		return []byte(service.GetJWTSigningKey()), nil
+		return []byte(initializers.GetJWTSigningKey()), nil
 	})
 
 	if err != nil || !token.Valid {
@@ -38,10 +38,9 @@ func RefreshToken(writer http.ResponseWriter, request *http.Request, _ httproute
 		return
 	}
 
-	// Create a new access token
-	expirationTime := time.Now().Add(time.Hour * 48) // Access token valid for 48 hours
+	expirationTime := time.Now().Add(time.Hour * 48)
 	newAccessToken, err := helper.CreateJWTToken(
-		[]byte(service.GetJWTSigningKey()),
+		[]byte(initializers.GetJWTSigningKey()),
 		string(claims.UserID),
 		expirationTime,
 	)
@@ -50,11 +49,9 @@ func RefreshToken(writer http.ResponseWriter, request *http.Request, _ httproute
 		return
 	}
 
-	// Respond with the new access token
 	response := authpkg.AccessTokenResponse{AccessToken: newAccessToken}
 	writer.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(writer).Encode(response); err != nil {
 		http.Error(writer, "Failed to encode response", http.StatusInternalServerError)
-		return
 	}
 }

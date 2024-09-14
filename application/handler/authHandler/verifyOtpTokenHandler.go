@@ -10,9 +10,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/sparsh011/AuthBackend-Go/application/db"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
+	"github.com/sparsh011/AuthBackend-Go/application/initializers"
 	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
-	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
 func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
@@ -36,8 +37,8 @@ func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *ht
 
 	formData := url.Values{}
 	formData.Set("token", token)
-	formData.Set("client_id", service.OtpServiceClientId())
-	formData.Set("client_secret", service.OtpServiceClientSecret())
+	formData.Set("client_id", initializers.OtpServiceClientId())
+	formData.Set("client_secret", initializers.OtpServiceClientSecret())
 
 	verifyTokenResponse, tokenVerificationError := helper.PostRequestHandler(
 		VerifyTokenApiBaseURL,
@@ -60,7 +61,7 @@ func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *ht
 	}
 
 	access, accessCreationError := helper.CreateJWTToken(
-		[]byte(service.GetJWTSigningKey()),
+		[]byte(initializers.GetJWTSigningKey()),
 		phoneNumber,
 		time.Now().Add(time.Hour*48),
 	)
@@ -71,7 +72,7 @@ func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *ht
 	}
 
 	refresh, refreshCreationError := helper.CreateJWTToken(
-		[]byte(service.GetJWTSigningKey()),
+		[]byte(initializers.GetJWTSigningKey()),
 		phoneNumber,
 		time.Now().Add(10*365*24*time.Hour),
 	)
@@ -95,7 +96,7 @@ func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *ht
 		Id:               userId,
 	}
 
-	isInserted, err := service.InsertUser(&user)
+	isInserted, err := db.InsertUser(&user)
 
 	if err != nil || !isInserted {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)

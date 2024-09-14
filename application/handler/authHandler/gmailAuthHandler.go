@@ -9,9 +9,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/sparsh011/AuthBackend-Go/application/db"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
+	"github.com/sparsh011/AuthBackend-Go/application/initializers"
 	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
-	"github.com/sparsh011/AuthBackend-Go/application/service"
 	"google.golang.org/api/idtoken"
 )
 
@@ -27,7 +28,7 @@ func ValidateGoogleIDTokenHandler(writer http.ResponseWriter, request *http.Requ
 	}
 
 	// Validate the Google ID token
-	tokenInfo, err := idtoken.Validate(context.Background(), tokenRequest.Token, service.GetGoogleWebClientID())
+	tokenInfo, err := idtoken.Validate(context.Background(), tokenRequest.Token, initializers.GetGoogleWebClientID())
 	if err != nil {
 		http.Error(writer, "Invalid token", http.StatusUnauthorized)
 		return
@@ -35,7 +36,7 @@ func ValidateGoogleIDTokenHandler(writer http.ResponseWriter, request *http.Requ
 
 	var userProfile map[string]interface{} = nil
 
-	// If email is verified, create user profile
+	// If email is verified, only then create user profile
 	if tokenInfo.Claims["email_verified"] == true {
 		verificationTime := time.Now()
 		userRandomName := helper.GetRandomName()
@@ -59,43 +60,42 @@ func ValidateGoogleIDTokenHandler(writer http.ResponseWriter, request *http.Requ
 			Id:               userId,
 		}
 
-		isInserted, err := service.InsertUser(&user)
+		isInserted, err := db.InsertUser(&user)
 
 		if err != nil || !isInserted {
-			http.Error(writer, err.Error(), http.StatusInternalServerError)
+			http.Error(writer, "Unable to save user details.", http.StatusInternalServerError)
 			return
 		}
 	}
 
 	access, accessCreationError := helper.CreateJWTToken(
-		[]byte(service.GetJWTSigningKey()),
+		[]byte(initializers.GetJWTSigningKey()),
 		tokenInfo.Claims["email"].(string),
 		time.Now().Add(time.Hour*48),
 	)
 	if accessCreationError != nil {
-		http.Error(writer, "Failed to create access token.", http.StatusInternalServerError)
+		http.Error(writer, "Unable to sign in.", http.StatusInternalServerError)
 		return
 	}
 
 	refresh, refreshCreationError := helper.CreateJWTToken(
-		[]byte(service.GetJWTSigningKey()),
+		[]byte(initializers.GetJWTSigningKey()),
 		tokenInfo.Claims["email"].(string),
 		time.Now().Add(10*365*24*time.Hour),
 	)
 	if refreshCreationError != nil {
-		http.Error(writer, "Failed to create refresh token.", http.StatusInternalServerError)
+		http.Error(writer, "Unable to sign in.", http.StatusInternalServerError)
 		return
 	}
 
 	response := map[string]interface{}{
 		"isVerified":  true,
-		"message":     "Gmail verification successful!",
+		"message":     "Gmail verified successfully.",
 		"access":      access,
 		"refresh":     refresh,
 		"userProfile": userProfile,
 	}
 
-	// Send the JSON response
 	writer.Header().Set("Content-Type", "application/json")
 	if jsonParsingError := json.NewEncoder(writer).Encode(response); jsonParsingError != nil {
 		http.Error(writer, "Something went wrong!", http.StatusInternalServerError)

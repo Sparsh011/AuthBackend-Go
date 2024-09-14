@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/sparsh011/AuthBackend-Go/application/service"
+	"github.com/sparsh011/AuthBackend-Go/application/initializers"
 )
 
 func CreateJWTToken(secretKey []byte, identifier string, exp time.Time) (string, error) {
@@ -30,7 +30,7 @@ func ValidateJWT(tokenString string) (bool, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(service.GetJWTSigningKey()), nil
+		return []byte(initializers.GetJWTSigningKey()), nil
 	})
 
 	if err != nil {
