@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
@@ -45,12 +46,20 @@ func SyncDatabase() {
 }
 
 func InsertUser(user *authpkg.User) (bool, error) {
-	existingUser := authpkg.User{}
-	result := DB.Where("phoneNumber = ?", user.PhoneNumber).First(&existingUser)
+	var existingUser authpkg.User
+	var result *gorm.DB
+
+	if !user.PhoneNumber.Valid || user.PhoneNumber.String != "" {
+		result = DB.Where("phone_number = ?", user.PhoneNumber).First(&existingUser)
+	} else if !user.EmailId.Valid || user.EmailId.String != "" {
+		result = DB.Where("email_id = ?", user.EmailId).First(&existingUser)
+	} else {
+		return false, errors.New("either phone number or email ID must be provided")
+	}
 
 	if result.Error == nil {
-		// User exists, update the CreatedAt time
-		existingUser.CreatedAt = user.CreatedAt
+		// User exists, update the LastLoginTime time
+		existingUser.VerificationTime = user.VerificationTime
 		updateResult := DB.Save(&existingUser)
 		if updateResult.Error != nil {
 			return false, updateResult.Error

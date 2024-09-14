@@ -1,14 +1,17 @@
 package authhandler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
+	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
 	"github.com/sparsh011/AuthBackend-Go/application/service"
 )
 
@@ -78,11 +81,43 @@ func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *ht
 		return
 	}
 
+	verificationTime := time.Now()
+	userRandomName := helper.GetRandomName()
+	userId := uuid.New()
+
+	user := authpkg.User{
+		VerificationTime: verificationTime,
+		ExpenseBudget:    -1,
+		Name:             userRandomName,
+		PhoneNumber:      sql.NullString{String: phoneNumber, Valid: true},
+		EmailId:          sql.NullString{},
+		ProfileUri:       "",
+		Id:               userId,
+	}
+
+	isInserted, err := service.InsertUser(&user)
+
+	if err != nil || !isInserted {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	userProfile := map[string]interface{}{
+		"verifiedAt":    verificationTime,
+		"expenseBudget": -1,
+		"name":          userRandomName,
+		"phoneNumber":   phoneNumber,
+		"emailId":       "",
+		"profileUri":    "",
+		"userId":        userId,
+	}
+
 	jsonResponse := map[string]interface{}{
-		"isOtpVerified": true,
-		"access":        access,
-		"refresh":       refresh,
-		"message":       "Otp verification successful!",
+		"isVerified":  true,
+		"message":     "Otp verification successful!",
+		"access":      access,
+		"refresh":     refresh,
+		"userProfile": userProfile,
 	}
 
 	if jsonParsingError := json.NewEncoder(writer).Encode(jsonResponse); jsonParsingError != nil {

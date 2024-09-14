@@ -1,6 +1,7 @@
 package authhandler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -166,9 +167,9 @@ func VerifyOtp(writer http.ResponseWriter, request *http.Request, params httprou
 
 	service.InsertUser(
 		&authpkg.User{
-			CreatedAt:     time.Now(),
-			ExpenseBudget: 0,
-			PhoneNumber:   phoneNumber,
+			VerificationTime: time.Now(),
+			ExpenseBudget:    0,
+			PhoneNumber:      sql.NullString{String: phoneNumber, Valid: true},
 		},
 	)
 

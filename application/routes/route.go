@@ -31,7 +31,7 @@ func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	router.GET(HomeRoute, handler.IndexHandler)
 	router.POST(RefreshTokenRoute, authhandler.RefreshToken)
 	router.GET(UserProfileRoute, profilehandler.UserProfile)
-	router.POST(VerifyGoogleOAuthToken, authhandler.ValidateGmailIDTokenHandler)
+	router.POST(VerifyGoogleOAuthToken, authhandler.ValidateGoogleIDTokenHandler)
 
 	fmt.Println("Starting server at port", service.GetPort())
 
