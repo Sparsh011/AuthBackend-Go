@@ -8,27 +8,33 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/sparsh011/AuthBackend-Go/application/handler"
 	authhandler "github.com/sparsh011/AuthBackend-Go/application/handler/authHandler"
-	"github.com/sparsh011/AuthBackend-Go/application/service"
+	profilehandler "github.com/sparsh011/AuthBackend-Go/application/handler/profileHandler"
+	"github.com/sparsh011/AuthBackend-Go/application/initializers"
 )
 
 func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	const (
-		SendOtpRoute      = "/login/send-otp"
-		ResendOtpRoute    = "/login/resend-otp"
-		VerifyOtpRoute    = "/login/verify-otp"
-		RefreshTokenRoute = "/user/refresh"
-		HomeRoute         = "/"
+		HomeRoute              = "/"
+		RefreshTokenRoute      = "/user/refresh"
+		UserProfileRoute       = "/user/profile"
+		VerifyTokenRoute       = "/login/otp/verify-token"
+		VerifyGoogleOAuthToken = "/login/gmail/verify-token"
 	)
 
-	router.POST(SendOtpRoute, authhandler.SendOtp)
-	router.POST(ResendOtpRoute, authhandler.ResendOtp)
-	router.POST(VerifyOtpRoute, authhandler.VerifyOtp)
+	// Index route
 	router.GET(HomeRoute, handler.IndexHandler)
+
+	// User profile routes
+	router.GET(UserProfileRoute, profilehandler.UserProfile)
 	router.POST(RefreshTokenRoute, authhandler.RefreshToken)
 
-	fmt.Println("Starting server at port", service.GetPort())
+	// Auth routes
+	router.POST(VerifyTokenRoute, authhandler.ValidateOtpVerificationTokenHandler)
+	router.POST(VerifyGoogleOAuthToken, authhandler.ValidateGoogleIDTokenHandler)
 
-	err := http.ListenAndServe(service.GetPort(), router)
+	fmt.Println("Starting server at port", initializers.GetPort())
+
+	err := http.ListenAndServe(initializers.GetPort(), router)
 	if err != nil {
 		println("Error starting server:", err.Error())
 		log.Fatal(err)

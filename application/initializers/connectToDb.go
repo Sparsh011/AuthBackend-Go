@@ -1,4 +1,4 @@
-package service
+package initializers
 
 import (
 	"fmt"
@@ -42,29 +42,4 @@ func ConnectToDatabase() (*gorm.DB, error) {
 // It WON'T delete unused columns to protect your data
 func SyncDatabase() {
 	DB.AutoMigrate(&authpkg.User{}, &expense.Expense{})
-}
-
-func InsertUser(user *authpkg.User) (bool, error) {
-	existingUser := authpkg.User{}
-	result := DB.Where("phoneNumber = ?", user.PhoneNumber).First(&existingUser)
-
-	if result.Error == nil {
-		// User exists, update the CreatedAt time
-		existingUser.CreatedAt = user.CreatedAt
-		updateResult := DB.Save(&existingUser)
-		if updateResult.Error != nil {
-			return false, updateResult.Error
-		}
-		return true, nil
-	} else if result.Error == gorm.ErrRecordNotFound {
-		// User doesn't exist, create a new user
-		createResult := DB.Create(&user)
-		if createResult.Error != nil {
-			return false, createResult.Error
-		}
-		return true, nil
-	} else {
-		// Some other error occurred
-		return false, result.Error
-	}
 }
