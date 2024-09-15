@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -34,28 +35,33 @@ func ValidateGoogleIDTokenHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	var userProfile map[string]interface{} = nil
-
 	// If email is verified, only then create user profile
-	if tokenInfo.Claims["email_verified"] == true {
-		verificationTime := time.Now()
-		userRandomName := helper.GetRandomName()
-		userId := uuid.New()
+	if tokenInfo.Claims["email_verified"] != true {
+		http.Error(writer, "Email could not be verified, please try again.", http.StatusInternalServerError)
+		return
+	}
+	var userProfile map[string]interface{} = nil
+	var userId = uuid.New()
+	email := tokenInfo.Claims["email"].(string)
+	existingUser, _ := db.FindUserIfExists(email, "")
 
-		userProfile = map[string]interface{}{
-			"verificationTime": verificationTime,
-			"expenseBudget":    -1,
-			"name":             userRandomName,
-			"emailId":          tokenInfo.Claims["email"],
-			"profileUri":       tokenInfo.Claims["picture"],
-			"userId":           userId,
-		}
+	verificationTime := time.Now()
+	userRandomName := helper.GetRandomName()
 
+	userProfile = map[string]interface{}{
+		"verificationTime": verificationTime,
+		"expenseBudget":    -1,
+		"name":             userRandomName,
+		"emailId":          email,
+		"profileUri":       tokenInfo.Claims["picture"],
+	}
+
+	if existingUser == nil {
 		user := authpkg.User{
 			VerificationTime: verificationTime,
 			ExpenseBudget:    -1,
 			Name:             userRandomName,
-			EmailId:          sql.NullString{String: tokenInfo.Claims["email"].(string), Valid: true},
+			EmailId:          sql.NullString{String: email, Valid: true},
 			ProfileUri:       tokenInfo.Claims["picture"].(string),
 			Id:               userId,
 		}
@@ -66,11 +72,17 @@ func ValidateGoogleIDTokenHandler(writer http.ResponseWriter, request *http.Requ
 			http.Error(writer, "Unable to save user details.", http.StatusInternalServerError)
 			return
 		}
+	} else {
+		userId = existingUser.Id
+		fmt.Println("User exists")
+		updateErr := db.UpdateVerificationTime(existingUser, verificationTime)
+		if updateErr != nil {
+			fmt.Println("Error : ", updateErr.Error())
+		}
 	}
 
 	access, accessCreationError := helper.CreateJWTToken(
-		[]byte(initializers.GetJWTSigningKey()),
-		tokenInfo.Claims["email"].(string),
+		userId.String(),
 		time.Now().Add(time.Hour*48),
 	)
 	if accessCreationError != nil {
@@ -79,8 +91,7 @@ func ValidateGoogleIDTokenHandler(writer http.ResponseWriter, request *http.Requ
 	}
 
 	refresh, refreshCreationError := helper.CreateJWTToken(
-		[]byte(initializers.GetJWTSigningKey()),
-		tokenInfo.Claims["email"].(string),
+		userId.String(),
 		time.Now().Add(10*365*24*time.Hour),
 	)
 	if refreshCreationError != nil {

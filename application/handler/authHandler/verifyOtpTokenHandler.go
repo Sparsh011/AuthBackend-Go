@@ -3,6 +3,7 @@ package authhandler
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -60,47 +61,35 @@ func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *ht
 		return
 	}
 
-	access, accessCreationError := helper.CreateJWTToken(
-		[]byte(initializers.GetJWTSigningKey()),
-		phoneNumber,
-		time.Now().Add(time.Hour*48),
-	)
-
-	if accessCreationError != nil {
-		http.Error(writer, "Failed to create access token.", http.StatusInternalServerError)
-		return
-	}
-
-	refresh, refreshCreationError := helper.CreateJWTToken(
-		[]byte(initializers.GetJWTSigningKey()),
-		phoneNumber,
-		time.Now().Add(10*365*24*time.Hour),
-	)
-
-	if refreshCreationError != nil {
-		http.Error(writer, "Failed to create refresh token.", http.StatusInternalServerError)
-		return
-	}
-
 	verificationTime := time.Now()
 	userRandomName := helper.GetRandomName()
 	userId := uuid.New()
 
-	user := authpkg.User{
-		VerificationTime: verificationTime,
-		ExpenseBudget:    -1,
-		Name:             userRandomName,
-		PhoneNumber:      sql.NullString{String: phoneNumber, Valid: true},
-		EmailId:          sql.NullString{},
-		ProfileUri:       "",
-		Id:               userId,
-	}
+	existingUser, _ := db.FindUserIfExists("", phoneNumber)
 
-	isInserted, err := db.InsertUser(&user)
+	if existingUser == nil {
+		user := authpkg.User{
+			VerificationTime: verificationTime,
+			ExpenseBudget:    -1,
+			Name:             userRandomName,
+			PhoneNumber:      sql.NullString{String: phoneNumber, Valid: true},
+			EmailId:          sql.NullString{},
+			ProfileUri:       "",
+			Id:               userId,
+		}
 
-	if err != nil || !isInserted {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
+		isInserted, err := db.InsertUser(&user)
+
+		if err != nil || !isInserted {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		userId = existingUser.Id
+		updateErr := db.UpdateVerificationTime(existingUser, verificationTime)
+		if updateErr != nil {
+			fmt.Println("Error: ", updateErr)
+		}
 	}
 
 	userProfile := map[string]interface{}{
@@ -110,7 +99,26 @@ func ValidateOtpVerificationTokenHandler(writer http.ResponseWriter, request *ht
 		"phoneNumber":   phoneNumber,
 		"emailId":       "",
 		"profileUri":    "",
-		"userId":        userId,
+	}
+
+	access, accessCreationError := helper.CreateJWTToken(
+		userId.String(),
+		time.Now().Add(time.Hour*48),
+	)
+
+	if accessCreationError != nil {
+		http.Error(writer, "Failed to create access token.", http.StatusInternalServerError)
+		return
+	}
+
+	refresh, refreshCreationError := helper.CreateJWTToken(
+		userId.String(),
+		time.Now().Add(10*365*24*time.Hour),
+	)
+
+	if refreshCreationError != nil {
+		http.Error(writer, "Failed to create refresh token.", http.StatusInternalServerError)
+		return
 	}
 
 	jsonResponse := map[string]interface{}{
