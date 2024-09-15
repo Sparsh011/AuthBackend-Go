@@ -11,10 +11,10 @@ func LoadEnvFile() {
 	godotenv.Unmarshal(".env")
 
 	err := godotenv.Load(".env")
-
 	if err != nil {
-		log.Fatal(err)
-		log.Fatal("Error loading .env file")
+		log.Println("No .env file found, falling back to system environment variables")
+	} else {
+		log.Println(".env file loaded successfully")
 	}
 }
 
