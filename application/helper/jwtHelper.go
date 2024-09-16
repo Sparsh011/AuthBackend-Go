@@ -2,6 +2,7 @@ package helper
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -27,7 +28,8 @@ func CreateJWTToken(userId string, exp time.Time) (string, error) {
 	return tokenString, nil
 }
 
-func ValidateJWT(tokenString string) (bool, error) {
+func ValidateAuthorizationHeader(tokenString string) (bool, error) {
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Check if the signing method is HMAC
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -88,4 +90,18 @@ func CreateAccessTokenFromRefreshToken(refreshToken string) (string, error) {
 
 	expirationTime := time.Now().Add(time.Hour * 48)
 	return CreateJWTToken(userId, expirationTime)
+}
+
+func ExtractTokenFromHeader(authHeader string) (string, error) {
+	if len(strings.TrimSpace(authHeader)) == 0 {
+		return "", fmt.Errorf("unable to authorize")
+	}
+
+	authHeaderParts := strings.Split(authHeader, " ")
+
+	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
+		return "", fmt.Errorf("unable to authorize")
+	}
+
+	return authHeaderParts[1], nil
 }

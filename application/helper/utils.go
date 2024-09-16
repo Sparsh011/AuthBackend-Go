@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -57,4 +58,11 @@ func GetRandomName() string {
 	randomNumber := rand.Intn(901) + 100
 
 	return fmt.Sprintf("%s-%d", randomSuperhero, randomNumber)
+}
+
+func HandleNullString(nullStr sql.NullString) string {
+	if nullStr.Valid {
+		return nullStr.String
+	}
+	return ""
 }

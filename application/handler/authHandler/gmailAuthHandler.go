@@ -21,7 +21,7 @@ type IdTokenRequest struct {
 	Token string `json:"token"`
 }
 
-func ValidateGoogleIDTokenHandler(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func ValidateGoogleIDToken(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	var tokenRequest IdTokenRequest
 	if err := json.NewDecoder(request.Body).Decode(&tokenRequest); err != nil {
 		http.Error(writer, "Invalid request payload", http.StatusBadRequest)

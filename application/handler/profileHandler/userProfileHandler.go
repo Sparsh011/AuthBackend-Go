@@ -2,44 +2,36 @@ package profilehandler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/sparsh011/AuthBackend-Go/application/db"
 	"github.com/sparsh011/AuthBackend-Go/application/helper"
+	authpkg "github.com/sparsh011/AuthBackend-Go/application/models/authPkg"
 )
 
-func UserProfile(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func GetUserProfile(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	authHeader := request.Header.Get("Authorization")
 
-	authHeader = strings.TrimSpace(authHeader)
+	token, tokenExtractionErr := helper.ExtractTokenFromHeader(authHeader)
 
-	if authHeader == "" {
-		http.Error(writer, "Authorization header is missing.", http.StatusUnauthorized)
+	if len(strings.TrimSpace(token)) == 0 || tokenExtractionErr != nil {
+		http.Error(writer, "Unable to authorize", http.StatusUnauthorized)
 		return
 	}
 
-	authHeaderParts := strings.Split(authHeader, " ")
-
-	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
-		http.Error(writer, "Invalid Authorization header format.", http.StatusUnauthorized)
-		return
-	}
-
-	isTokenValid, validationError := helper.ValidateJWT(strings.TrimSpace(authHeaderParts[1]))
+	isTokenValid, validationError := helper.ValidateAuthorizationHeader(strings.TrimSpace(token))
 
 	if !isTokenValid || validationError != nil {
-		fmt.Println("Validation error: ", validationError.Error())
-		http.Error(writer, "Invalid token.", http.StatusUnauthorized)
+		http.Error(writer, "Unable to authorize.", http.StatusUnauthorized)
 		return
 	}
 
-	userId, userIdExtractionErr := helper.ExtractUserID(authHeaderParts[1])
+	userId, userIdExtractionErr := helper.ExtractUserID(token)
 
 	if userIdExtractionErr != nil {
-		http.Error(writer, "Unable to authorize user, please login again.", http.StatusUnauthorized)
+		http.Error(writer, "Unable to authorize user.", http.StatusUnauthorized)
 		return
 	}
 
@@ -50,7 +42,16 @@ func UserProfile(writer http.ResponseWriter, request *http.Request, params httpr
 		return
 	}
 
-	if json := json.NewEncoder(writer).Encode(user); json != nil {
+	userDto := authpkg.UserDto{
+		VerificationTime: user.VerificationTime,
+		ExpenseBudget:    user.ExpenseBudget,
+		Name:             user.Name,
+		PhoneNumber:      helper.HandleNullString(user.PhoneNumber),
+		EmailId:          helper.HandleNullString(user.EmailId),
+		ProfileUri:       user.ProfileUri,
+	}
+
+	if json := json.NewEncoder(writer).Encode(userDto); json != nil {
 		http.Error(writer, "Something went wrong!", http.StatusInternalServerError)
 	}
 	writer.Header().Set("Content-Type", "application/json")
