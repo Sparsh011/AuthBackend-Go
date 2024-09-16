@@ -16,3 +16,12 @@ type User struct {
 	EmailId          sql.NullString `json:"emailId" gorm:"size:50;unique"`
 	ProfileUri       string         `json:"profileUri"`
 }
+
+type UserDto struct {
+	VerificationTime time.Time `json:"verificationTime"`
+	ExpenseBudget    int32     `json:"expenseBudget"`
+	Name             string    `json:"name"`
+	PhoneNumber      string    `json:"phoneNumber"`
+	EmailId          string    `json:"emailId"`
+	ProfileUri       string    `json:"profileUri"`
+}

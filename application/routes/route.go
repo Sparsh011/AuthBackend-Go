@@ -14,23 +14,25 @@ import (
 
 func ConfigureRoutesAndStartServer(router *httprouter.Router) {
 	const (
-		HomeRoute              = "/"
-		RefreshTokenRoute      = "/user/refresh"
-		UserProfileRoute       = "/user/profile"
-		VerifyTokenRoute       = "/login/otp/verify-token"
-		VerifyGoogleOAuthToken = "/login/gmail/verify-token"
+		HomeRoute                   = "/"
+		RefreshTokenRoute           = "/user/refresh"
+		UserProfileRoute            = "/user/profile"
+		UpdateUserProfileFieldRoute = "/user/profile"
+		VerifyTokenRoute            = "/login/otp/verify-token"
+		VerifyGoogleOAuthTokenRoute = "/login/gmail/verify-token"
 	)
 
 	// Index route
 	router.GET(HomeRoute, handler.IndexHandler)
 
 	// User profile routes
-	router.GET(UserProfileRoute, profilehandler.UserProfile)
+	router.GET(UserProfileRoute, profilehandler.GetUserProfile)
 	router.POST(RefreshTokenRoute, authhandler.RefreshToken)
+	router.POST(UpdateUserProfileFieldRoute, profilehandler.UpdateUserProfileField)
 
 	// Auth routes
-	router.POST(VerifyTokenRoute, authhandler.ValidateOtpVerificationTokenHandler)
-	router.POST(VerifyGoogleOAuthToken, authhandler.ValidateGoogleIDTokenHandler)
+	router.POST(VerifyTokenRoute, authhandler.ValidateOtpVerificationToken)
+	router.POST(VerifyGoogleOAuthTokenRoute, authhandler.ValidateGoogleIDToken)
 
 	fmt.Println("Starting server at port", initializers.GetPort())
 

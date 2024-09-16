@@ -102,3 +102,70 @@ func FindUserByID(userId string) (*authpkg.User, error) {
 
 	return &user, nil
 }
+
+func UpdateProfileUri(userId string, profileUri string) error {
+	var user authpkg.User
+
+	userFetchErr := initializers.DB.First(&user, "id = ?", userId).Error
+	if userFetchErr != nil {
+		if userFetchErr == gorm.ErrRecordNotFound {
+			return fmt.Errorf("user not found")
+		}
+		return userFetchErr
+	}
+
+	user.ProfileUri = profileUri
+
+	savingErr := initializers.DB.Save(&user).Error
+	if savingErr != nil {
+		return fmt.Errorf("failed to update user: %v", savingErr)
+	}
+
+	return nil
+}
+
+func UpdateUserName(userId string, name string) error {
+	var user *authpkg.User
+
+	userFetchErr := initializers.DB.First(&user, "id = ?", userId).Error
+
+	if userFetchErr != nil {
+		if userFetchErr == gorm.ErrRecordNotFound {
+			return fmt.Errorf("user not found")
+		}
+		return userFetchErr
+	}
+
+	user.Name = name
+
+	savingErr := initializers.DB.Save(&user).Error
+
+	if savingErr != nil {
+		return fmt.Errorf("failed to update user: %v", savingErr)
+	}
+
+	return nil
+}
+
+func UpdateUserExpenseBudget(userId string, budget int32) error {
+	var user *authpkg.User
+
+	userFetchErr := initializers.DB.First(&user, "id = ? ", userId).Error
+
+	if userFetchErr != nil {
+		if userFetchErr == gorm.ErrRecordNotFound {
+			return fmt.Errorf("user not found")
+		}
+		return userFetchErr
+	}
+
+	user.ExpenseBudget = budget
+
+	userSaveErr := initializers.DB.Save(user).Error
+
+	if userSaveErr != nil {
+		return fmt.Errorf("failed to update user: %v", userSaveErr)
+	}
+
+	return nil
+}
